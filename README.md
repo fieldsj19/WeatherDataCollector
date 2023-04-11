@@ -8,6 +8,7 @@ Weather Data Manager is a simple Java application that allows users to manage a 
 
 ## Classes
 ***WeatherData:*** A class representing a single weather data record, containing temperature, humidity, and pressure.
+
 ***WeatherDataManager:*** A class that manages a collection of WeatherData objects, providing methods to add, remove, and display weather data.
 
 ## Usage
