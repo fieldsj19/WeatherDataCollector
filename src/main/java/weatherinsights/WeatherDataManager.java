@@ -48,10 +48,6 @@ public class WeatherDataManager {
         weatherDataList.add(weatherData);
     }
 
-    public static void test() {
-
-    }
-
     public static boolean removeData() {
         int index;
         System.out.println("Enter index to remove:");
