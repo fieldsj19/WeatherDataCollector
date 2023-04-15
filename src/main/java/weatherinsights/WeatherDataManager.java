@@ -1,17 +1,41 @@
-package project4.src.main.java;
+package weatherinsights;
 
 import java.util.Scanner;
+import com.google.gson.*;
 import java.util.ArrayList;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Properties;
+import java.io.InputStream;
 public class WeatherDataManager {
     private static ArrayList<WeatherData> weatherDataList = new ArrayList<>();
     private static boolean stop = false;
     private static Scanner scanner = new Scanner(System.in);
 
+
+
+    private static String getApiKey() {
+        Properties properties = new Properties();
+        String apiKey = null;
+
+        try (InputStream inputStream = WeatherDataManager.class.getClassLoader().getResourceAsStream("config.properties")) {
+            properties.load(inputStream);
+            apiKey = properties.getProperty("api_key");
+        } catch (IOException e) {
+            System.out.println("Error while reading API key from config.properties file");
+            e.printStackTrace();
+        }
+
+        return apiKey;
+    }
+
+    //Adds weather data to arraylist of WeatherData objects
     public static void addData(WeatherData weatherData) {
         System.out.println("Enter temp:");
         weatherData.setTemperature(scanner.nextDouble());
@@ -33,13 +57,14 @@ public class WeatherDataManager {
         System.out.println("Enter index to remove:");
         index = scanner.nextInt();
 
-        if (index >= weatherDataList.size() || index < 0 || weatherDataList.size() == 0) {
+        if (index >= weatherDataList.size() || index < 0) {
             return false;
         }
         weatherDataList.remove(index);
         return true;
     }
 
+    //Prints out arrayList of WeeatherData objects to console.
     public static void display() {
         for (WeatherData data : weatherDataList) {
             System.out.println(data.toString());
@@ -47,6 +72,7 @@ public class WeatherDataManager {
     }
     
 
+    //Reads file from user input adn
     public static void readFromFile() {
         System.out.println("Enter file name to read data from:");
         String filename = scanner.next();
@@ -99,7 +125,8 @@ public class WeatherDataManager {
             3. Display all weather data.
             4. Read weather data from file.
             5. Write weather data to file.
-            6. Exit
+            6. Get current weather data.
+            7. Exit program.
                 """);
         try {
             option = scanner.nextInt();
@@ -110,31 +137,55 @@ public class WeatherDataManager {
         return option;
     }
 
-    public static void main(String[] args) {
+    public static WeatherData fetchCurrentWeather(double lat, double lon, String apiKey) throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=" + lat + "&lon=" + lon + "&exclude=hourly,daily&appid=" + apiKey + "&units=imperial";
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+    
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    
+        Gson gson = new Gson();
+        JsonObject jsonObject = gson.fromJson(response.body(), JsonObject.class);
+        JsonObject currentJson = jsonObject.getAsJsonObject("current");
+    
+        double temperature = currentJson.get("temp").getAsDouble();
+        int humidity = currentJson.get("humidity").getAsInt();
+        int pressure = currentJson.get("pressure").getAsInt();
+        double windSpeed = currentJson.get("wind_speed").getAsDouble();
+
+        return new WeatherData(temperature, humidity, pressure, windSpeed);
+    }
+    
+
+    public static void main(String[] args) throws Exception {
+        double lat = 33.44;
+        double lon = -94.04;
+        String apiKey = getApiKey();
+
         WeatherData weatherData = new WeatherData(0, 0, 0);
         while (!stop) {
             switch (promptMenu()) {
-                case 1:
-                    WeatherDataManager.addData(weatherData);
-                    break;
-                case 2:
+                case 1 -> WeatherDataManager.addData(weatherData);
+                case 2 -> {
                     boolean status = WeatherDataManager.removeData();
-                    if (status == false) {
+                    if (!status) {
                         System.out.println("Index out of range.\n");
                     }
-                    break;
-                case 3:
-                    WeatherDataManager.display();
-                    break;
-                case 4:
-                    WeatherDataManager.readFromFile();
-                    break;
-                case 5:
-                    WeatherDataManager.writeToFile();
-                    break;
-                case 6:
-                    stop = true;
-                    break;
+                }
+                case 3 -> WeatherDataManager.display();
+                case 4 -> WeatherDataManager.readFromFile();
+                case 5 -> WeatherDataManager.writeToFile();
+                case 6 -> {
+                    WeatherData currentWeather = fetchCurrentWeather(lat, lon, apiKey);
+                    System.out.println("Temperature: " + currentWeather.getTemperature());
+                    System.out.println("Humidity: " + currentWeather.getHumidity());
+                    System.out.println("Pressure: " + currentWeather.getPressure());
+                    System.out.println("Wind Speed: " + currentWeather.getWindSpeed());
+                }
+                case 7 -> stop = true;
             }
         }
     }
