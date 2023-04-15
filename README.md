@@ -1,10 +1,18 @@
 # Weather Data Manager
-Weather Data Manager is a simple Java application that allows users to manage a collection of weather data. Users can add, remove, and display weather data records.
+Weather Data Manager is a java-based project to manage, store, and retrieve weather data. The project uses Maven for dependency management.
 
 ## Features
-* Add weather data (temperature, humidity, pressure)
-* Remove weather data by index
-* Display all weather data
+* Adding, removing, and displaying weather data manually
+* Reading weather data from a file and writing it to a file
+* Fetching current weather data from OpenWeatherMap API
+* Incorporating latitude and longitude data to fetch location-based weather information
+* Using a configuration file to store API key
+* WeatherData class with temperature, humidity, pressure, and wind speed attributes
+
+
+## Dependencies
+* Gson 2.10.1
+- Apache HttpClient 5.2.1
 
 ## Classes
 ***WeatherData:*** A class representing a single weather data record, containing temperature, humidity, and pressure.
