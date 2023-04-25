@@ -133,20 +133,25 @@ public class WeatherDataManager {
         return option;
     }
 
-    public static WeatherData fetchCurrentWeather(double lat, double lon, String apiKey) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=" + lat + "&lon=" + lon + "&exclude=hourly,daily&appid=" + apiKey + "&units=imperial";
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .GET()
-            .build();
-    
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-    
-        Gson gson = new Gson();
-        JsonObject jsonObject = gson.fromJson(response.body(), JsonObject.class);
-        JsonObject currentJson = jsonObject.getAsJsonObject("current");
-    
+    public static WeatherData fetchCurrentWeather(String locationName, String apiKey) throws Exception {
+        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + locationName + "&appid=" + apiKey;
+        JsonObject jsonObject = fetchJsonObjectFromUrl(url);
+
+        JsonObject coordJson = jsonObject.getAsJsonObject("coord");
+        if (coordJson == null) {
+            throw new RuntimeException("Invalid response: 'coord' field missing.");
+        }
+        double lat = coordJson.get("lat").getAsDouble();
+        double lon = coordJson.get("lon").getAsDouble();
+
+        String url2 = "https://api.openweathermap.org/data/3.0/onecall?lat=" + lat + "&lon=" + lon + "&exclude=hourly,daily&appid=" + apiKey + "&units=imperial";
+        JsonObject jsonObject2 = fetchJsonObjectFromUrl(url2);
+
+        JsonObject currentJson = jsonObject2.getAsJsonObject("current");
+        if (currentJson == null) {
+            throw new RuntimeException("Invalid response: 'current' field missing.");
+        }
+
         double temperature = currentJson.get("temp").getAsDouble();
         int humidity = currentJson.get("humidity").getAsInt();
         int pressure = currentJson.get("pressure").getAsInt();
@@ -154,11 +159,28 @@ public class WeatherDataManager {
 
         return new WeatherData(temperature, humidity, pressure, windSpeed);
     }
-    
+
+    private static JsonObject fetchJsonObjectFromUrl(String url) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            Gson gson = new Gson();
+            JsonObject errorJson = gson.fromJson(response.body(), JsonObject.class);
+            String errorMessage = errorJson.get("message").getAsString();
+            throw new RuntimeException("Failed to fetch weather data: " + errorMessage);
+        }
+
+        Gson gson = new Gson();
+        return gson.fromJson(response.body(), JsonObject.class);
+    }
 
     public static void main(String[] args) throws Exception {
-        double lat = 33.44;
-        double lon = -94.04;
         String apiKey = getApiKey();
 
         WeatherData weatherData = new WeatherData(0, 0, 0);
@@ -175,7 +197,9 @@ public class WeatherDataManager {
                 case 4 -> WeatherDataManager.readFromFile();
                 case 5 -> WeatherDataManager.writeToFile();
                 case 6 -> {
-                    WeatherData currentWeather = fetchCurrentWeather(lat, lon, apiKey);
+                    System.out.println("Location Name:");
+                    String locationName = scanner.next();
+                    WeatherData currentWeather = fetchCurrentWeather(locationName, apiKey);
                     System.out.println("Temperature: " + currentWeather.getTemperature());
                     System.out.println("Humidity: " + currentWeather.getHumidity());
                     System.out.println("Pressure: " + currentWeather.getPressure());
