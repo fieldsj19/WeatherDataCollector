@@ -6,16 +6,19 @@ public class WeatherData {
     private int pressure;
     private double windSpeed;
 
+    private String summary;
+
     public WeatherData(double temperature, int humidity, int pressure) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.pressure = pressure;
     }
-    public WeatherData(double temperature, int humidity, int pressure, double windSpeed) {
+    public WeatherData(double temperature, int humidity, int pressure, double windSpeed, String summary) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.pressure = pressure;
         this.windSpeed = windSpeed;
+        this.summary = summary;
     }
 
     public void setTemperature(double temperature) {
@@ -50,8 +53,17 @@ public class WeatherData {
         return windSpeed;
     }
 
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    @Override
     public String toString() {
-        return "Temperature:" + temperature + ", Humidity:" + humidity + ", Pressure:" + pressure
-        + ", Wind Speed: " + windSpeed;
+        return "Temperature:" + temperature + "\nHumidity:" + humidity + "\nPressure:" + pressure
+        + "\nWind Speed: " + windSpeed + "\nSummary: " + summary;
     }
 }
