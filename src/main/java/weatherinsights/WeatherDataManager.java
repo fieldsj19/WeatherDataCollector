@@ -60,7 +60,7 @@ public class WeatherDataManager {
         return true;
     }
 
-    //Prints out arrayList of WeeatherData objects to console.
+    //Prints out arrayList of WeatherData objects to console.
     public static void display() {
         for (WeatherData data : weatherDataList) {
             System.out.println(data.toString());
@@ -144,20 +144,26 @@ public class WeatherDataManager {
         double lat = coordJson.get("lat").getAsDouble();
         double lon = coordJson.get("lon").getAsDouble();
 
-        String url2 = "https://api.openweathermap.org/data/3.0/onecall?lat=" + lat + "&lon=" + lon + "&exclude=hourly,daily&appid=" + apiKey + "&units=imperial";
+        String url2 = "https://api.openweathermap.org/data/3.0/onecall?lat=" + lat + "&lon=" + lon + "&exclude=hourly&appid=" + apiKey + "&units=imperial";
         JsonObject jsonObject2 = fetchJsonObjectFromUrl(url2);
 
         JsonObject currentJson = jsonObject2.getAsJsonObject("current");
         if (currentJson == null) {
             throw new RuntimeException("Invalid response: 'current' field missing.");
         }
+        JsonArray dailyJson = jsonObject2.getAsJsonArray("daily");
+        if (dailyJson == null || dailyJson.size() == 0) {
+            throw new RuntimeException("Invalid response: 'daily' field missing.");
+        }
 
+        String summary = dailyJson.get(0).getAsJsonObject().get("summary").getAsString();
         double temperature = currentJson.get("temp").getAsDouble();
         int humidity = currentJson.get("humidity").getAsInt();
         int pressure = currentJson.get("pressure").getAsInt();
         double windSpeed = currentJson.get("wind_speed").getAsDouble();
 
-        return new WeatherData(temperature, humidity, pressure, windSpeed);
+
+        return new WeatherData(temperature, humidity, pressure, windSpeed, summary);
     }
 
     private static JsonObject fetchJsonObjectFromUrl(String url) throws IOException, InterruptedException {
@@ -200,10 +206,7 @@ public class WeatherDataManager {
                     System.out.println("Location Name:");
                     String locationName = scanner.next();
                     WeatherData currentWeather = fetchCurrentWeather(locationName, apiKey);
-                    System.out.println("Temperature: " + currentWeather.getTemperature());
-                    System.out.println("Humidity: " + currentWeather.getHumidity());
-                    System.out.println("Pressure: " + currentWeather.getPressure());
-                    System.out.println("Wind Speed: " + currentWeather.getWindSpeed());
+                    System.out.println(currentWeather.toString());
                 }
                 case 7 -> stop = true;
             }
