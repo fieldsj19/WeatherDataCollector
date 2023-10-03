@@ -4,3 +4,5 @@
 
 
 src/main/resources/config.properties
+/target/
+*.class
