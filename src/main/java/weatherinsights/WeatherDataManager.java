@@ -1,7 +1,12 @@
 package weatherinsights;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
+
+import domain.WeatherData;
 import com.google.gson.*;
+import exceptions.WeatherDataRunTimeException;
+
 import java.util.ArrayList;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,7 +41,9 @@ public class WeatherDataManager {
     }
 
     //Adds weather data to arraylist of WeatherData objects
-    public static void addData(WeatherData weatherData) {
+    public static void addData() {
+        WeatherData weatherData = new WeatherData();
+
         System.out.println("Enter temp:");
         weatherData.setTemperature(scanner.nextDouble());
 
@@ -69,7 +76,7 @@ public class WeatherDataManager {
     
 
     //Reads file from user input adn
-    public static void readFromFile() {
+    public static void readFromFile() throws WeatherDataRunTimeException {
         System.out.println("Enter file name to read data from:");
         String filename = scanner.next();
         
@@ -87,8 +94,8 @@ public class WeatherDataManager {
             }
 
             fileScanner.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found.\n");
+        } catch (FileNotFoundException | InputMismatchException e) {
+            throw new WeatherDataRunTimeException(e.getMessage());
         }
     }
     
@@ -192,7 +199,7 @@ public class WeatherDataManager {
         WeatherData weatherData = new WeatherData(0, 0, 0);
         while (!stop) {
             switch (promptMenu()) {
-                case 1 -> WeatherDataManager.addData(weatherData);
+                case 1 -> WeatherDataManager.addData();
                 case 2 -> {
                     boolean status = WeatherDataManager.removeData();
                     if (!status) {
@@ -206,7 +213,7 @@ public class WeatherDataManager {
                     System.out.println("Location Name:");
                     String locationName = scanner.next();
                     WeatherData currentWeather = fetchCurrentWeather(locationName, apiKey);
-                    System.out.println(currentWeather.toString());
+                    System.out.println(currentWeather);
                 }
                 case 7 -> stop = true;
             }

@@ -1,4 +1,4 @@
-package weatherinsights;
+package domain;
 
 public class WeatherData {
     private double temperature;
@@ -7,6 +7,8 @@ public class WeatherData {
     private double windSpeed;
 
     private String summary;
+
+    public WeatherData() {}
 
     public WeatherData(double temperature, int humidity, int pressure) {
         this.temperature = temperature;
